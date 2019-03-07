@@ -20,6 +20,8 @@ from bs4 import BeautifulSoup as BS
 def PCHomeblogScrape(id , page_num):
     articles_counter = 0
     # article_links=[]
+    os.mkdir('./BlogPosts')
+    os.mkdir('./BlogPosts/{}'.format(id))
     while (page_num > 0):
         url = 'http://mypaper.pchome.com.tw/{}/P{}'.format(id, page_num-1)
         connection = requests.get(url)
@@ -51,7 +53,7 @@ def PCHomeblogScrape(id , page_num):
         print('Page {} Scraped {} articles'.format(page_num, articles_counter))
         articles_counter = 0
         page_num -= 1
-    print('DONE! See the output at ./BlogPosts! ')
+    print('DONE! See the output at ./BlogPosts/<id>  ! ')
 
 if __name__ == '__main__':
     os.system('clear')
