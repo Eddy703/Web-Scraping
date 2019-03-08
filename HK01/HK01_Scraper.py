@@ -36,18 +36,17 @@ with open('./ScrapedContents/{}/url.csv'.format(today),'w',encoding='utf-8') as 
     inlst=[] #initialize an empty list for writing in csv
     for item in href_lst: #iterate through the returned list
 
-        if not(re.match('/[A-Za-z]*/[0-9]+/|/[A-Za-z...]|https://', item['href'])):
+        if not(re.match('/[A-Za-z]*/[0-9]+/|/[A-Za-z...]|\/', item['href'])):
             #condition for filtering out unwanted links (such as /zone/18, /channel/18)
             url="https://www.hk01.com"+item['href'] #make a complete url instead of just /(*)/(*)/(*)
-            title = str(item['href']).replace(str(re.compile('\/*.+\/')),'')
-            urls.append(url)
-            uCount+=1
-            sublst=[title, url]
+            urls.append(url)  # append the article url to the list
+            title = "".join([str(string) for string in item.stripped_strings])
+            uCount +=1
+            sublst = [title, url]
             inlst.append([title, url]) #stores the sublist into a wholelist for actually writing in later
 
     for subl in inlst:      #writing in !
         writer.writerow(subl)
-
 f.close()
 
 inlst2=[]
