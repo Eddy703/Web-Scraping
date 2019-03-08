@@ -20,8 +20,10 @@ from bs4 import BeautifulSoup as BS
 def PCHomeblogScrape(id , page_num):
     articles_counter = 0
     # article_links=[]
-    os.mkdir('./BlogPosts')
-    os.mkdir('./BlogPosts/{}'.format(id))
+    if not os.path.exists('./BlogPosts'):
+        os.mkdir('./BlogPosts')
+    if not os.path.exists('./BlogPosts/{}'.format(id)):
+        os.mkdir('./BlogPosts/{}'.format(id))
     while (page_num > 0):
         url = 'http://mypaper.pchome.com.tw/{}/P{}'.format(id, page_num-1)
         connection = requests.get(url)
@@ -29,6 +31,7 @@ def PCHomeblogScrape(id , page_num):
             print ('Connection is not established')
             break
         soup = BS(connection.text,'lxml')
+        print(soup.prettify)
         for link in set(soup.find_all('h3', class_ = 'title brk_h')):
 
         #article_links.append(link.a['href'])
