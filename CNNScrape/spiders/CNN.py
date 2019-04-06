@@ -6,10 +6,9 @@ import re
 import sqlite3
 """
  TO-DO:
- - Missing info in data DataBase
- - Index error
+ - DB issue
  Done:
- - DataBase write in
+ - database write in
  - Get Catagories from homepage
  - Store titles and corresponding links
  - Grab article author, time and content
@@ -24,18 +23,18 @@ c = connection.cursor()
 def create_table():
     return c.execute("CREATE TABLE IF NOT EXISTS Article(catagory TEXT, time TEXT, author TEXT, editorial TEXT, content TEXT)")
 
-def transaction_bld(sql):
-    global connection; global c; global transaction
-    transaction.append(sql)
-    if len(transaction) > 4:
-        c.execute("BEGIN TRANSACTION")
-        for s in transaction:
-            try:
-                c.execute(s)
-            except:
-                pass
-        connection.commit()
-        transaction = []
+# def transaction_bld(sql):
+#     global connection; global c; global transaction
+#     transaction.append(sql)
+#     if len(transaction) > 4:
+#         c.execute("BEGIN TRANSACTION")
+#         for s in transaction:
+#             try:
+#                 c.execute(s)
+#             except:
+#                 pass
+#         connection.commit()
+#         transaction = []
 
 dom = "https://edition.cnn.com"
 create_table()
@@ -76,29 +75,30 @@ class CnnXpathSpider(scrapy.Spider):
                     continue
                 elif re.search(r"(\/travel)", art):
                     yield scrapy.Request(art, callback = self.tra_content)
-                elif re.search(r'\/travel\/special', art):
-                    continue
+                elif re.search(r'\/travel\/specials', art):
+                    pass
                 else:
                     yield scrapy.Request(art, callback = self.norm_content)
 
     def tra_content(self, response):
+        global c; global connection
         catagory = response.request.url.split('/')[-3]
         st= response.css("div.Article__subtitle::text").getall()
         author = st[0].replace(", CNN", "")
         time = st[-1]
         content = "\n".join(response.css("div.Article__body *::text").getall()).strip()
-        sql = """INSERT INTO Article (catagory, time, author, content) VALUES ("{}", "{}", "{}", "{}");""".format(catagory, time, author, content)
-        transaction_bld(sql)
+        c.execute("""INSERT INTO Article (catagory, time, author, content) VALUES (?, ?, ?, ?);""", (catagory, time, author, content))
+        connection.commit()
 
     def norm_content(self, response):
+        global c; global connection
         catagory = response.request.url.split('/')[-3]
         content ="\n".join(response.css("div.l-container *::text").getall())
         editorial = response.css("span.metadata__byline__author a::text").get()
         time = response.css("p.update-time::text").get()
         if response.css("span.metadata__byline__author::text"):
             author = response.css("div.Article_subtitle::text").get()
-            sql = """INSERT INTO Article (catagory, time, author, editorial, content) VALUES ("{}", "{}", "{}", "{}", "{}");""".format(catagory, time, author, editorial, content)
-            transaction_bld(sql)
+            c.execute("""INSERT INTO Article (catagory, time, author, editorial, content) VALUES (?, ?, ?, ?, ?);""", (catagory, time, author, editorial, content))
         else:
-            sql = """INSERT INTO Article (catagory, time, editorial , content) VALUES ("{}", "{}", "{}", "{}");""".format(catagory, time, editorial, content)
-            transaction_bld(sql)
+            c.execute("""INSERT INTO Article (catagory, time, editorial , content) VALUES (?, ?, ?, ?);""", (catagory, time, editorial, content))
+        connection.commit()
